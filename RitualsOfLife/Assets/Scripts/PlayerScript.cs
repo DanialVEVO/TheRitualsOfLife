@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class PlayerScript : MonoBehaviour {
 
+    
     [SerializeField]
     float acceleration = 10f;
 
@@ -14,14 +15,28 @@ public class PlayerScript : MonoBehaviour {
     float maxCameraAngle = 45.0f;
 
     [SerializeField]
+    float lookUpSpeed = 4.0f;
+
+    [SerializeField]
     Image phoneImage;
 
+    [SerializeField]
+    Image finger;
+
+    [SerializeField]
+    float fingerSpeed = 3.0f;
+
+    bool fingerActive = false;
+    
     float phoneLook = 0.0f;
 
 	// Use this for initialization
 	void Start () {
-	    
-	}
+
+
+        finger.transform.GetChild(1).GetComponent<Image>().color = new Color(1, 1, 1, 0);
+
+    }
 
     void Walking()
     {
@@ -41,14 +56,52 @@ public class PlayerScript : MonoBehaviour {
 
     void PhoneActive()
     {
-       // Debug.Log("PHONE!");
+        Vector2 nextPos = Vector2.zero;
+
+        if (Input.GetAxis("RightBump") == 1)
+        {
+
+            fingerActive = true;
+
+            finger.transform.GetChild(0).GetComponent<Image>().color = new Color(1, 1, 1, 0);
+            finger.transform.GetChild(1).GetComponent<Image>().color = new Color(1, 1, 1, 1);
+        }
+        else if (fingerActive == true)
+        {
+
+            fingerActive = false;
+
+            finger.transform.GetChild(0).GetComponent<Image>().color = new Color(1, 1, 1, 1);
+            finger.transform.GetChild(1).GetComponent<Image>().color = new Color(1, 1, 1, 0);
+        }
+
+        if (Mathf.Abs(Input.GetAxis("RightX")) == 1)
+            nextPos += new Vector2(Input.GetAxis("RightX"),0);
+
+        if (Mathf.Abs(Input.GetAxis("RightY")) == 1)
+            nextPos -= new Vector2(0,Input.GetAxis("RightY"));       
+
+
+        finger.GetComponent<RectTransform>().anchoredPosition += nextPos*fingerSpeed;
+
+
+
+        if (!fingerActive)
+            return;
+
+        var activeTouchObjects = phoneImage.GetComponentsInChildren<TouchReceiver>();
+
+        foreach (TouchReceiver t in activeTouchObjects)
+        {
+            t.FingerPlacement(finger.GetComponent<RectTransform>().position);
+        }
     }
 
     void Phone()
     {
         if (Input.GetAxis("LeftBump") < 1.0f && phoneLook < 1.0f)
         {
-            phoneLook += Time.deltaTime;
+            phoneLook += lookUpSpeed * Time.deltaTime;
             if (phoneLook > 1)
                 phoneLook = 1;
 
@@ -58,7 +111,7 @@ public class PlayerScript : MonoBehaviour {
 
         if (Input.GetAxis("LeftBump") > 0.0f && phoneLook > 0.0f)
         {
-            phoneLook -= Time.deltaTime;
+            phoneLook -= lookUpSpeed * Time.deltaTime;
             if (phoneLook < 0)
                 phoneLook = 0;
 
